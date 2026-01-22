@@ -1,6 +1,18 @@
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, filters, CallbackQueryHandler
 from utils.storage import load_db, save_db
+
+# Helper to build the menu locally or import it to avoid circular imports
+def build_menu():
+    kb = [
+        [InlineKeyboardButton("Help", callback_data="menu:help")],
+        [InlineKeyboardButton("Buy Orders", callback_data="menu:buy")],
+        [InlineKeyboardButton("Orders History", callback_data="menu:history")],
+        [InlineKeyboardButton("Wallet", callback_data="menu:wallet")],
+        [InlineKeyboardButton("UPI ID Setup", callback_data="menu:upi")],
+    ]
+    return InlineKeyboardMarkup(kb)
+
 UPI_INPUT = 0
 
 async def upi_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -12,14 +24,24 @@ async def upi_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def receive_upi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     uid = str(user.id)
-    upi = update.message.text.strip()
+    upi_id = update.message.text.strip()
+    
+    # Simple validation
+    if "@" not in upi_id:
+        await update.message.reply_text("❌ Invalid UPI ID format. Please try again.")
+        return UPI_INPUT
+    
     db = load_db()
     if uid not in db["users"]:
-        db["users"][uid] = {"name": user.full_name, "upi": upi, "wallet": 0, "orders": []}
+        db["users"][uid] = {"name": user.full_name, "upi": upi_id, "wallet": 0, "orders": []}
     else:
-        db["users"][uid]["upi"] = upi
+        db["users"][uid]["upi"] = upi_id
     save_db(db)
-    await update.message.reply_text(f"Your UPI ID has been set to: {upi}")
+    
+    await update.message.reply_text(
+        f"✅ UPI ID updated to: {upi_id}\n\nYour account is now fully set up and ready for buy orders!",
+        reply_markup=build_menu()
+    )
     return ConversationHandler.END
 
 UPI_CONV = ConversationHandler(
