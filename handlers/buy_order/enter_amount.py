@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 from utils.storage import load_db, save_db
 from utils.calculator import calc_target
 from utils.matcher import find_earliest_open_order
@@ -29,7 +29,7 @@ async def receive_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Create user's new order
     order_id = f"ORD{int(time.time())}{str(uuid.uuid4())[:6]}"
-    target = calc_target(amt)
+    target = calc_target(amt) # This uses the 3% extra logic
     new_order = {
         "order_id": order_id,
         "owner": uid,
