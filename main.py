@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 ENTER_AMOUNT, ASSIGN_RECEIVER, TXN_ID, SCREENSHOT = range(4)
 
 
-async def main():
+def main():
     if config.BOT_TOKEN is None or config.BOT_TOKEN == "REPLACE_WITH_YOUR_TOKEN":
-        print("Please set the BOT_TOKEN in config.py or export BOT_TOKEN env var.")
+        print("Please set the BOT_TOKEN in config.py or export BOT_TOKEN env variable")
         return
 
     application = ApplicationBuilder().token(config.BOT_TOKEN).build()
@@ -37,22 +37,22 @@ async def main():
     application.add_handler(CommandHandler("start", start_h.start))
 
     # CallbackQuery menu handler
-    application.add_handler(CallbackQueryHandler(start_h.menu_handler, pattern="^menu:"))
+    application.add_handler(CallbackQueryHandler(start_h.menu_handler, pattern="^menu_"))
 
     # Help, Wallet, History, UPI handlers (callback)
-    application.add_handler(CallbackQueryHandler(help_h.help_handler, pattern="^menu:help$"))
-    application.add_handler(CallbackQueryHandler(wallet_h.wallet_handler, pattern="^menu:wallet$"))
-    application.add_handler(CallbackQueryHandler(history_h.history_handler, pattern="^menu:history$"))
-    application.add_handler(CallbackQueryHandler(upi_h.upi_entry, pattern="^menu:upi$"))
+    application.add_handler(CallbackQueryHandler(help_h.help_handler, pattern="^help$"))
+    application.add_handler(CallbackQueryHandler(wallet_h.wallet_handler, pattern="^wallet$"))
+    application.add_handler(CallbackQueryHandler(history_h.history_handler, pattern="^history$"))
+    application.add_handler(CallbackQueryHandler(upi_h.upi_entry, pattern="^upi$"))
 
     # UPI conversation
     application.add_handler(upi_h.UPI_CONV)
 
     # Buy order conversation
     buy_conv = ConversationHandler(
-        entry_points=[CallbackQueryHandler(bo_enter.enter_amount, pattern="^menu:buy$")],
+        entry_points=[CallbackQueryHandler(bo_enter.enter_amount, pattern="^buy$")],
         states={
-            ENTER_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bo_enter.receive_amount)],
+            ENTER_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bo_enter.enter_amount)],
             TXN_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, bo_txn.receive_txn)],
             SCREENSHOT: [MessageHandler(filters.PHOTO, bo_ss.receive_screenshot)],
         },
@@ -62,10 +62,15 @@ async def main():
     )
     application.add_handler(buy_conv)
 
-    # Start the bot
     print("Bot starting...")
-    await application.run_polling()
-
+    application.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import logging
+
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO
+    )
+    
+    main()

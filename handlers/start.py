@@ -1,7 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler
 from utils.storage import ensure_user, save_db, load_db
-from constants import buttons, texts
+import constants.buttons as buttons
+import constants.texts as texts
 import json
 
 def build_menu():
